@@ -32,6 +32,11 @@ app.get('/api/persons', (req, res) => {
   res.json(persons)
 })
 
+app.get('/info', (req, res) => {
+  var d = new Date();
+  res.send('<p>Puhelinluettelossa on '+persons.length+' tietuetta.</p><p>'+d.toString()+'</p>')
+})
+
 
 const PORT = 3001
 app.listen(PORT, () => {
