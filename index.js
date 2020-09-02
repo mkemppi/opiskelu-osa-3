@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const app = express()
@@ -8,16 +9,9 @@ app.use(express.static('build'))
 morgan.token('body', function (req, res) { return JSON.stringify(req.body) });
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
 app.use(cors())
-/*
-const requestLogger = (request, response, next) => {
-  console.log('Method:', request.method)
-  console.log('Path:  ', request.path)
-  console.log('Body:  ', request.body)
-  console.log('---')
-  next()
-}
 
-app.use(requestLogger)*/
+const Person = require('./models/person')
+
 
 let persons = [
   {
@@ -45,7 +39,7 @@ let persons = [
 //app.get('/', (req, res) => {
 //  res.send('<h1>Puhelinluettelo!</h1>')
 //})
-
+/*
 app.get('/api/persons/:id', (request, response) => {
   const id = Number(request.params.id)
   const person = persons.find(person => person.id === id)
@@ -56,9 +50,19 @@ app.get('/api/persons/:id', (request, response) => {
     response.status(404).end()
   }
 })
+*/
+
+app.get('/api/persons/:id', (request, response) => {
+  Person.findById(request.params.id).then(person => {
+    response.json(person)
+  })
+})
 
 app.get('/api/persons', (req, res) => {
-  res.json(persons)
+  //res.json(persons)
+  Person.find({}).then(persons => {
+    res.json(persons)
+  })
 })
 
 app.get('/info', (req, res) => {
@@ -72,7 +76,7 @@ app.delete('/api/persons/:id', (request, response) => {
 
   response.status(204).end()
 })
-
+/*
 const generateId = () => {
   const maxId = persons.length > 0
     ? Math.max(...persons.map(p => p.id))
@@ -95,7 +99,21 @@ app.post('/api/persons', (request, response) => {
       })
     }
   }
+*/
+app.post('/api/persons', (request, response) => {
+  const body = request.body
 
+  if (body.name === undefined) {
+    return response.status(400).json({ error: 'name missing' })
+  }
+  if (body.phone === undefined) {
+    return response.status(400).json({ error: 'phone number missing' })
+  }
+  const person = new Person({
+    name: body.name,
+    phone: body.phone,
+  })
+  
   const check = persons.find(p => p.name === body.name) 
   if(check) {
     return response.status(400).json({ 
@@ -103,23 +121,11 @@ app.post('/api/persons', (request, response) => {
     })
   }
 
-  const person = {
-    name: body.name,
-    phone: body.phone,
-    id: generateId(),
-  }
-
-  persons = persons.concat(person)
-
-  response.json(person)
+  person.save().then(savedPerson => {
+    response.json(savedPerson)
+  })
 })
-/*
-const unknownEndpoint = (request, response) => {
-  response.status(404).send({ error: 'unknown endpoint' })
-}
 
-app.use(unknownEndpoint)
-*/
 
 const PORT = process.env.PORT || 3001
 
