@@ -67,16 +67,21 @@ app.get('/api/persons/:id', (request, response, next) => {
   })*/
 })
 
-app.get('/api/persons', (req, res) => {
+app.get('/api/persons', (req, res, next) => {
   //res.json(persons)
   Person.find({}).then(persons => {
     res.json(persons)
   })
+  .catch(error => next(error))
 })
 
 app.get('/info', (req, res) => {
   var d = new Date();
-  res.send('<p>Puhelinluettelossa on '+persons.length+' tietuetta.</p><p>'+d.toString()+'</p>')
+  Person.find({}).then(persons => {
+    res.send('<p>Puhelinluettelossa on '+persons.length+' tietuetta.</p><p>'+d.toString()+'</p>')
+  })
+  .catch(error => next(error))
+
 })
 
 app.delete('/api/persons/:id', (request, response, next) => {
@@ -146,12 +151,14 @@ app.post('/api/persons', (request, response, next) => {
     phone: body.phone,
   })
   
-  const check = persons.find(p => p.name === body.name) 
-  if(check) {
-    return response.status(400).json({ 
-      error: 'name already in phonebook' 
-    })
-  }
+  Person.find({}).then(persons => {
+    const check = persons.find(p => p.name === body.name) 
+    if(check) {
+      return response.status(400).json({ 
+        error: 'name already in phonebook' 
+      })
+    }
+  })
 
   person.save().then(savedPerson => {
     response.json(savedPerson)
