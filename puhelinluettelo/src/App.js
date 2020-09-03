@@ -97,13 +97,13 @@ const App = () => {
     event.preventDefault()
 
     let val = newName.toLowerCase();
-    let matches = persons.filter(test => test.name.toLowerCase().includes(val));
-    if(matches.length>0) {
+    //let matches = persons.filter(test => test.name.toLowerCase().includes(val));
+    const findPerson = persons.find(p => p.name.toLowerCase() === val)
+    if(findPerson) {
       if(window.confirm(`${newName} on jo lisätty puhelinluetteloon, haluatko korvata vanhan numeron uudella?`)) {
 
-        const findPerson = persons.find(p => p.name === newName)
+        //const findPerson = persons.find(p => p.name === newName)
         const changedPerson = { ...findPerson, phone: newPhone }
-        //console.log("changedPerson",changedPerson)
         
         personService
         .update(changedPerson.id, changedPerson)
@@ -124,6 +124,11 @@ const App = () => {
         .then(returnedPerson => {
         setPersons(persons.concat(returnedPerson))
         setNewName('')
+      })
+      .catch(error => {
+        // pääset käsiksi palvelimen palauttamaan virheilmoitusolioon näin
+        console.log(error.response.data)
+        setMessage(['error',error.response.data])
       })
 
       setMessage(['success','Tiedot lisätty'])
